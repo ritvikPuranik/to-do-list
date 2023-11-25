@@ -12,3 +12,4 @@ A Blockchain app to keep track of your activities. This displays the tasks uniqu
 2. Launch ganache on local machine and connect couple of accounts with metamask
 3. Run `truffle migrate --reset`
 4. Run `npm run dev`
+5. Once the site is launched, play around with creating tasks/ completing tasks from different MetaMask accounts connected to the site. The app will keep track of each task associated with an account.
