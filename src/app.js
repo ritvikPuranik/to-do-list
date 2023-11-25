@@ -29,8 +29,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         console.log("Contract Being deployed!");
         try{
             instance = new web3.eth.Contract(abi, contractAddress);
-            let owner = await instance.methods.owner().call();
-            console.log("contractIntance>", owner);
+
             await renderTasks();
         }catch(err){
             alert("contract deployment failed");
@@ -49,52 +48,45 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     const completeTask = async(id) =>{
-        let taskNumber = id.split('-')[1];
-        console.log("complete task methods called!>>", taskNumber);
-        let task = await instance.methods.tasks(taskNumber).call();
-        await instance.methods.updateTask(task).send({"from": userAccount});
+        // let taskNumber = id.split('-')[1];
+        // console.log("complete task methods called!>>", taskNumber);
+        // let task = await instance.methods.tasks(taskNumber).call();
+        await instance.methods.updateTask().send({"from": userAccount, "gas": 3000000});
         await renderTasks();
 
     }
 
     const renderTasks = async() =>{
+        taskList.innerHTML = ""; //Erase all existing tasks from ui
         let accountBalance = await web3.eth.getBalance(userAccount);
         document.querySelector('#user-account').innerHTML = `Your address: ${userAccount}`;
         document.querySelector('#account-balance').innerHTML = `Account Balance: ${web3.utils.fromWei(accountBalance)} ether`;
 
-        taskList.innerHTML = "";
-        let tasksLength = await instance.methods.length().call();
-        let pendingTasks = [];
-        let completedTasks = [];
-        for(let i=0; i<tasksLength; i++){
-            let task = await instance.methods.tasks(i).call();
-            let taskStatus = await instance.methods.taskStatus(task).call();
-            taskStatus ? pendingTasks.push([i,task]) : completedTasks.push([i,task]);
-        }
-        
-        pendingTasks.map(item =>{
-            let row = document.createElement('li');
-            row.innerHTML = `<div class="form-check p-0">
-                <input class="form-check-input float-none mr-3" type="checkbox" value="" id="task-${item[0]}">
-                <label class="form-check-label" for="task-${item[0]}">
-                    ${item[1]}
-                </label>
-                </div>`;
-            taskList.append(row);
-            addClickListener(`task-${item[0]}`);
-        })
+        let response = await instance.methods.accounts(userAccount).call();
+        let taskId = response[0];
+        let {name, isComplete} = response[1];
+        // console.log("Response from accounts>", isComplete);
 
-        completedTasks.map(item =>{
+        if(response.taskLength > 0){
             let row = document.createElement('li');
-            row.innerHTML = `<div class="form-check p-0">
-                <input class="form-check-input float-none mr-3" type="checkbox" value="" id="task-${item[0]}" checked>
-                <label class="form-check-label" for="task-${item[0]}">
-                    ${item[1]}
-                </label>
-                </div>`;
-        taskList.append(row);
-        addClickListener(`task-${item[0]}`);
-        })
+            if(isComplete){
+                row.innerHTML = `<div class="form-check p-0">
+                    <input class="form-check-input float-none mr-3" type="checkbox" value="" id="task-${taskId}" checked>
+                    <label class="form-check-label" for="task-${taskId}">
+                        ${name}
+                    </label>
+                    </div>`;
+            }else{
+                row.innerHTML = `<div class="form-check p-0">
+                    <input class="form-check-input float-none mr-3" type="checkbox" value="" id="task-${taskId}">
+                    <label class="form-check-label" for="task-${taskId}">
+                        ${name}
+                    </label>
+                    </div>`;
+            }
+            taskList.append(row);
+            addClickListener(`task-${taskId}`);
+        }
     }
 
     const addClickListener = (itemId) =>{

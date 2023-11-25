@@ -2,25 +2,34 @@
 pragma solidity 0.8.19;
 
 contract ToDoList {
-  address public owner;
-
-  mapping(string => bool) public taskStatus;
-  string[] public tasks;
-  uint public length;
-
-  constructor() {
-    owner = msg.sender;
+  struct Task{
+    string name;
+    bool isComplete;
   }
 
-  function updateTask(string memory _task) public {
-    // require(msg.sender == owner, "You are not the owner, please switch accounts");
-    taskStatus[_task] = !taskStatus[_task];
+  struct Account{
+    uint8 taskLength;
+    // mapping (uint8 => Task) taskList;
+    Task taskList;
+    // Task[] taskList;
+  }
+
+  mapping(address => Account) public accounts;
+//   mapping(uint8 => Task) public taskListPublic;
+  
+  function updateTask() public {
+    require(accounts[msg.sender].taskLength > 0, "No tasks to update");
+    accounts[msg.sender].taskList.isComplete = !accounts[msg.sender].taskList.isComplete;
   }
 
   function addTask(string memory _taskName) public {
-    tasks.push(_taskName);
-    taskStatus[_taskName] = true;
-    length++;
+    Task memory newTask = Task(_taskName, false);
+    
+    accounts[msg.sender] = Account({
+      taskLength: 1,
+      taskList: newTask
+    });    
+
   }
 
 }
