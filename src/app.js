@@ -1,137 +1,50 @@
-document.addEventListener("DOMContentLoaded", function () {
-    web3 = new Web3("http://127.0.0.1:7545");
-    let abi = [
-        {
-            "inputs": [
-                {
-                    "internalType": "string",
-                    "name": "_taskName",
-                    "type": "string"
-                }
-            ],
-            "name": "addTask",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "stateMutability": "nonpayable",
-            "type": "constructor"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "string",
-                    "name": "_task",
-                    "type": "string"
-                }
-            ],
-            "name": "updateTask",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "length",
-            "outputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "owner",
-            "outputs": [
-                {
-                    "internalType": "address",
-                    "name": "",
-                    "type": "address"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "uint256",
-                    "name": "",
-                    "type": "uint256"
-                }
-            ],
-            "name": "tasks",
-            "outputs": [
-                {
-                    "internalType": "string",
-                    "name": "",
-                    "type": "string"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                {
-                    "internalType": "string",
-                    "name": "",
-                    "type": "string"
-                }
-            ],
-            "name": "taskStatus",
-            "outputs": [
-                {
-                    "internalType": "bool",
-                    "name": "",
-                    "type": "bool"
-                }
-            ],
-            "stateMutability": "view",
-            "type": "function"
-        }
-    ];
-    let contractAddress = '0x5A1Bb164D1B94FdE8De9117D8642e1c186653250';
-
+document.addEventListener("DOMContentLoaded", async function () {
     let instance = null;
+    let abi = null, contractAddress = "";
     let userAccount = null;
-    
-    const submitAction = async()  => {
+
+    let web3 = new Web3('http://127.0.0.1:7545');
+
+    $.getJSON("ToDoList.json", function(toDoList) {
+        console.log("todoList>>", toDoList.abi);
+        abi = toDoList.abi;
+        contractAddress = toDoList.networks['5777'].address;
+        console.log("contractAddress>>", toDoList.networks['5777'].address);
+    });
+
+    const onInit = async() => {
+        await window.ethereum.enable();
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const account = accounts[0];
+        userAccount = account;
+        
+        window.ethereum.on('accountsChanged', async function (accounts) {
+            userAccount = accounts[0];
+            await renderTasks();
+        });   
+    }
+
+
+    const deployContract = async()  => {
         console.log("Contract Being deployed!");
         try{
             instance = new web3.eth.Contract(abi, contractAddress);
             let owner = await instance.methods.owner().call();
             console.log("contractIntance>", owner);
-            // alert("success!!");
-            document.querySelector('#list-container').classList.remove('invisible');
-            document.querySelector('#deploy-contract').classList.add('invisible');
+            await renderTasks();
         }catch(err){
             alert("contract deployment failed");
             console.log("err>>", err);
         }
-        
-        // Load account data
-        web3.eth.getCoinbase(function(err, account) {
-            if (err === null) {
-                userAccount = account;
-                document.querySelector('#user-account').innerHTML = `Your address: ${account}`;
-            }
-        });
     }
 
     const createTask = async() =>{
         try{
             let task = prompt("Enter your task", "Go for a run...");
-            await instance.methods.addTask(task).send({"from": userAccount});
+            await instance.methods.addTask(task).send({"from": userAccount, "gas": 3000000});
             await renderTasks();
         }catch(err){
-            console.log("task creation failed!");
+            console.log("task creation failed!>>", err);
         }
     }
 
@@ -145,6 +58,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const renderTasks = async() =>{
+        let accountBalance = await web3.eth.getBalance(userAccount);
+        document.querySelector('#user-account').innerHTML = `Your address: ${userAccount}`;
+        document.querySelector('#account-balance').innerHTML = `Account Balance: ${web3.utils.fromWei(accountBalance)} ether`;
+
         taskList.innerHTML = "";
         let tasksLength = await instance.methods.length().call();
         let pendingTasks = [];
@@ -188,11 +105,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-    document.querySelector('#deploy-contract').onclick = submitAction;
     document.querySelector('#create-task').onclick = createTask;
     document.querySelector('#render-tasks').onclick = renderTasks;
     
     let taskList = document.querySelector("#task-list");
     
+    await onInit();
+    deployContract();
     
 });
