@@ -48,12 +48,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     const completeTask = async(id) =>{
-        // let taskNumber = id.split('-')[1];
-        // console.log("complete task methods called!>>", taskNumber);
-        // let task = await instance.methods.tasks(taskNumber).call();
-        await instance.methods.updateTask().send({"from": userAccount, "gas": 3000000});
+        let taskNumber = id.split('-')[1];
+        console.log("complete task methods called!>>", taskNumber);
+        await instance.methods.updateTask(taskNumber).send({"from": userAccount, "gas": 3000000});
         await renderTasks();
-
     }
 
     const renderTasks = async() =>{
@@ -62,30 +60,35 @@ document.addEventListener("DOMContentLoaded", async function () {
         document.querySelector('#user-account').innerHTML = `Your address: ${userAccount}`;
         document.querySelector('#account-balance').innerHTML = `Account Balance: ${web3.utils.fromWei(accountBalance)} ether`;
 
-        let response = await instance.methods.accounts(userAccount).call();
-        let taskId = response[0];
-        let {name, isComplete} = response[1];
-        // console.log("Response from accounts>", isComplete);
+        let taskLength = await instance.methods.accounts(userAccount).call();
+        console.log("Response from accounts>", taskLength);
 
-        if(response.taskLength > 0){
-            let row = document.createElement('li');
-            if(isComplete){
-                row.innerHTML = `<div class="form-check p-0">
-                    <input class="form-check-input float-none mr-3" type="checkbox" value="" id="task-${taskId}" checked>
-                    <label class="form-check-label" for="task-${taskId}">
-                        ${name}
-                    </label>
-                    </div>`;
-            }else{
-                row.innerHTML = `<div class="form-check p-0">
-                    <input class="form-check-input float-none mr-3" type="checkbox" value="" id="task-${taskId}">
-                    <label class="form-check-label" for="task-${taskId}">
-                        ${name}
-                    </label>
-                    </div>`;
+        if(taskLength > 0){
+            for(let i=0; i<taskLength; i++){
+                let taskData = await instance.methods.getTask(i).call({"from": userAccount});
+                let taskName = taskData[0];
+                let isComplete = taskData[1];
+                // console.log("response>>", taskData);
+                let row = document.createElement('li');
+                if(isComplete){
+                    row.innerHTML = `<div class="form-check p-0">
+                        <input class="form-check-input float-none mr-3" type="checkbox" value="" id="task-${i}" checked>
+                        <label class="form-check-label" for="task-${i}">
+                            ${taskName}
+                        </label>
+                        </div>`;
+                }else{
+                    row.innerHTML = `<div class="form-check p-0">
+                        <input class="form-check-input float-none mr-3" type="checkbox" value="" id="task-${i}">
+                        <label class="form-check-label" for="task-${i}">
+                            ${taskName}
+                        </label>
+                        </div>`;
+                }
+                taskList.append(row);
+                addClickListener(`task-${i}`);
+
             }
-            taskList.append(row);
-            addClickListener(`task-${taskId}`);
         }
     }
 
