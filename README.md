@@ -1,9 +1,9 @@
 # To Do List
-A Blockchain app to keep track of your activities
+A Blockchain app to keep track of your activities. This displays the tasks unique to each account of metamask that is connected to the site.
 
 ---
 ## Features-
-1. Add Task - Takes the user prompt and adds a task into the smart contract
+1. Add Task - Takes the user prompt and adds a task into the smart contract. This is mapped to the account address that creates the task.
 2. Refresh Tasks - Reads the tasks from the smart contract and renders onto the UI
 3. Complete Task - When a task is checked on the UI, a transaction is made with the smart contract to update status of the task. This task will then show up as per the status on the UI
 
