@@ -1,5 +1,5 @@
 # To Do List
-A Blockchain app to keep track of your activities. This displays the tasks unique to each account of metamask that is connected to the site.
+A Blockchain app to keep track of your activities. This is account-specific, meaning each account connected to the site contains its own to-do List.
 
 ---
 ## Features-
