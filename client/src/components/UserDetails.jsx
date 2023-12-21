@@ -28,10 +28,10 @@ const UserDetails = () =>{
       }, [accounts]);
 
     return(
-        <>
-            <h2 className="mt-5" id="user-account">Your Account: {userAccount}</h2>
-            <h2 id="account-balance">Account Balance: {accountBalance}</h2>
-        </>
+        <div >
+            <h2 className="mt-2 d-flex justify-content-center" id="user-account">Your Account: {userAccount}</h2>
+            <h2 className="d-flex justify-content-center">Account Balance: {accountBalance}</h2>
+        </div>
         )
 }
 
